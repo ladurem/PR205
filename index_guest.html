@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href='./fullcalendar/fullcalendar.css' rel='stylesheet' />
+	<link href='./fullcalendar/fullcalendar.print.css' rel='stylesheet' media='print' />
+	<script src='./lib/jquery.min.js'></script>
+	<script src='./lib/jquery-ui.custom.min.js'></script>
+	<script src='./fullcalendar/fullcalendar_2.js'></script>
+	<link href="./css/font-awesome.css" rel="stylesheet">
+	<script src='/socket.io/socket.io.js'></script>
+	<meta charset="utf8" />
+	<script>
+	function save(){
+		liste_evts = $('#calendar').fullCalendar('clientEvents');
+		function replacer(key, value){
+			if (key == "source")
+				return undefined;
+			else
+				return value;
+		}
+		socket.emit('save', JSON.stringify(liste_evts, replacer));
+		$('.fa-floppy-o').css('color', 'red');
+	}
+	var socket = io.connect(document.URL);
+
+	$(document).ready(function() {
+		socket.on('save_ok', function() {
+			setTimeout( function(){$('.fa-floppy-o').css('color', 'green');  },800);
+		});
+		/* Select the right color according to type of lesson */
+		function setEventColor(event){
+			if(event.type_cours == 'COURS'){
+				event.color = '#fff3d4';
+				event.borderColor = '#b38509';
+				event.textColor = '#b38509';
+			} else if(event.type_cours == 'EI' || event.type_cours == 'TP'  || event.type_cours == 'Projet'){
+				event.color = '#f9ffdf';
+				event.borderColor = '#6b830a';
+				event.textColor = '#6b830a';
+			} else if(event.type_cours == 'TD'){
+				event.color = '#e4ecff';
+				event.borderColor = '#004b62';
+				event.textColor = '#004b62';
+			}
+		}
+		/* initialize the external events
+		-----------------------------------------------------------------*/
+
+		/* Importation liste de cours */
+		$(function(){
+			$(window).scroll(function () {
+				if ($(this).scrollTop() > 39) {
+					$('#wrapper-menu').addClass("fixed-top");
+				} else {
+					$('#wrapper-menu').removeClass("fixed-top");
+				} 
+
+			}); 
+
+
+
+			$.ajaxSetup({cache:false});
+			$.getJSON('./cours.json', function(data){
+				$.each(data, function(nomUV,uv){
+					
+					$("<h1 class='external-event'  style='text-align: center;'>"+nomUV+"</h1>").appendTo('#external-events').after('<div id="'+nomUV+'" style="display:none;">').click(function(){
+						$("#"+nomUV).toggle('normal');
+					});
+
+					$.each(uv, function(nomModule, module){
+
+						$("<h2 class='external-event' style='text-align: center; background-color:purple'>"+nomModule+"</h2>").appendTo('#'+nomUV).after('<div id="'+nomModule+'" style="display:none;">').click(function(){
+							$("#"+nomModule).toggle('normal');
+						});
+						$.each(module, function(type, content){
+							if(type != 'titre'){
+
+								var eventObject = {
+									title: nomModule+": "+content.titre+' '+type, // use the element's text as the event title
+								};
+								
+								//Affiche tous les groupes quand il y en a plusieurs.
+								for(i=1;i<=content.groupe;i++){
+									$('<div class="external-event" id="'+nomModule+'-'+type+'-'+i+'"  data-categorie="'+type+'" data-options=\'{"id":"'+nomModule+'","titre":"'+module.titre+'","nb_heure":"'+content.nb_heures+'","prof":"'+content.prof+'","longueur":"'+content.longueur+'","groupe":"'+i+'"}\'>'+nomModule+': '+module.titre+' '+type+' - Groupe '+i+'<span class="heures_left"></span><span class="cours_left"</span></div>')
+									.data('eventObject', eventObject)
+									.draggable({
+										zIndex: 999,
+										revert: true,
+										revertDuration: 0,
+									}).appendTo('#'+nomModule);
+									
+
+								}
+							}
+
+							$('div.external-event').each(function(){
+								if($(this).data("categorie") == 'COURS'){
+									$(this).css('background-color','#fff3d4').css('color', '#b38509').css('border-color', '#b38509');
+								} else if($(this).data("categorie") == 'EI'){
+									$(this).css('background-color', '#f9ffdf').css('color', '#6b830a').css('border-color', '#6b830a');
+								} else if($(this).data("categorie") == 'TD'){
+									$(this).css('background-color', '#e4ecff').css('color', '#004b62').css('border-color', '#004b62');
+								} else if($(this).data("categorie") == 'TP' || $(this).data("categorie") == 'Projet'){
+									$(this).css('background-color', '#f9ffdf').css('color', '#6b830a').css('border-color', '#6b830a');
+								}
+							});
+
+						});
+
+
+})
+
+})
+
+$.each(durees, function(index, event){
+	$('#'+event.id).data('options').nb_heure = $('#'+event.id).data('options').nb_heure - event.duree;
+})
+
+$('div.external-event span.heures_left').each(function(){
+	var span = $(this);
+	var nbHeure = $(this).parent().data('options').nb_heure;
+	var longueur = $(this).parent().data('options').longueur;
+	span.text(Math.round(nbHeure/60*100)/100+'h');
+	span.next().text(Math.round(nbHeure/longueur*100)/100);
+});
+
+});
+
+
+}); 
+
+
+$('div.external-event span.heures_left').each(function(){
+	var span = $(this);
+	var nbHeure = $(this).parent().data('options').nb_heure;
+	span.text(Math.round(nbHeure/60*100)/100+'h');
+	span.next().text(Math.round(nbHeure/80*100)/100);
+});
+
+		/*// Griser les cours avec 0h restantes
+		if($("#"+id_cours).data("options").nb_heure <= 0){
+			$("#"+id_cours).css('background-color', 'grey');
+		}*/
+		
+
+		/* initialize the calendar
+		-----------------------------------------------------------------*/
+
+		$('#calendar').fullCalendar({
+			editable: false,
+			defaultView : 'agendaWeek',
+			droppable: false, // this allows things to be dropped onto the calendar !!!
+
+			eventSources: [
+			{
+				url: document.URL+"save.json",
+				color: 'red',    // an option!
+				textColor: 'white'  // an option!
+			}
+
+			],
+
+
+			eventClick: function(event) {
+				// opens events in a popup window
+				alert('>'+event.title+'end>'+event.end);
+
+				return false;
+			},
+			eventDrop: function(event) {
+				// Numérotation des cours lors d'un déplacement d'évènement.
+				id_cours = event.id_cours;
+				liste_same_ue = $('#calendar').fullCalendar('clientEvents', function(event2){
+					if(event2.id_cours == id_cours)
+						return true;
+				});
+				total_cours = Math.round($('#'+id_cours+' span.cours_left').text()) + Math.round(liste_same_ue.length);
+				liste_same_ue.sort(function(a,b){return a.start-b.start});
+				i=1;
+				$.each(liste_same_ue, function(index, value){
+					liste_same_ue[index].numero = i;
+					liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\nGroupe "+liste_same_ue[index].groupe+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+					i++;
+				});
+
+				var text = 'TITRE : '+event.title+', Nouveau debut : '+event.start+', fin = '+event.end+', PROF = '+event.prof;
+				save();	
+
+			},
+			eventResize: function(event, dayDelta, minuteDelta){
+				//Sauvegarde de l'evt
+				//alert('Chg temps'+event.start+', fin = '+event.end+'ID = '+event.id);
+				var id_cours  = event.id_cours;
+				$("#"+id_cours).data("options").nb_heure=$("#"+id_cours).data("options").nb_heure-minuteDelta;
+				// griser les cours qui ont 0h restantes à placer
+				if($("#"+id_cours).data("options").nb_heure <= 0){
+					$("#"+id_cours).css('background-color', 'grey');
+				}
+
+
+
+				$('div.external-event span.heures_left').each(function(){
+					var span = $(this);
+					var nbHeure = $(this).parent().data('options').nb_heure;
+					span.text(Math.round(nbHeure/60*100)/100+'h');
+					span.next().text(Math.round(nbHeure/80*100)/100);
+				});
+				save();
+
+			},
+
+			drop: function(date, allDay) { // this function is called when something is dropped
+
+				// retrieve the dropped element's stored Event Object
+				var originalEventObject = $(this).data('eventObject');
+				// we need to copy it, so that multiple events don't have a reference to the same object
+				var copiedEventObject = $.extend({}, originalEventObject);
+
+				// assign it the date that was reported
+				copiedEventObject.groupe = $(this).data("options").groupe;
+				copiedEventObject.start = date;
+				copiedEventObject.id_cours  =  $(this).data("options").id+'-'+$(this).data("categorie")+'-'+copiedEventObject.groupe;
+				copiedEventObject.prof = $(this).data("options").prof;
+				copiedEventObject.type_cours = $(this).data("categorie");
+				copiedEventObject.titre = $(this).data("options").titre;
+
+				
+				/* TODO : A creuser */
+				setEventColor(copiedEventObject);
+				copiedEventObject.end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()+1, date.getMinutes()+20, 0,0);
+				copiedEventObject.allDay = false;
+
+
+				// Gestion de la numérotation des cours par UE
+
+				liste_same_ue = $('#calendar').fullCalendar('clientEvents', function(event){
+					if(event.id_cours == copiedEventObject.id_cours)
+						return true;
+				});
+				total_cours = Math.round($('#'+copiedEventObject.id_cours+' span.cours_left').text()) + Math.round(liste_same_ue.length);
+				if(liste_same_ue.length == 0){
+					copiedEventObject.numero = 1;
+					copiedEventObject.title = $(this).data("options").titre+"\n"+$(this).data("categorie")+"\n"+$(this).data("options").prof+"\nGroupe "+$(this).data("options").groupe+"\n"+copiedEventObject.numero+'/'+total_cours;
+				} else {
+					liste_same_ue.push(copiedEventObject);
+					liste_same_ue.sort(function(a,b){return a.start-b.start});
+					i=1;
+					$.each(liste_same_ue, function(index, value){
+						if(liste_same_ue[index].id == copiedEventObject.id_cours){
+							copiedEventObject.numero = i;
+							copiedEventObject.title = copiedEventObject.titre+"\n"+copiedEventObject.type_cours+"\n"+copiedEventObject.prof+"\nGroupe "+copiedEventObject.groupe+"\n"+copiedEventObject.numero+'/'+total_cours;
+							i++;
+						} else {
+							liste_same_ue[index].numero = i;
+							liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\nGroupe "+liste_same_ue[index].groupe+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+							i++;
+						}
+					})
+				}
+
+				
+				save();
+
+				$('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
+				if($(this).data("options").nb_heure ==0){
+					alert('Le cours de Mr/Mme '+copiedEventObject.prof+' est complet.');
+					$(this).remove();
+				}
+				else {
+					$(this).data("options").nb_heure =$(this).data("options").nb_heure-80;
+				}
+
+				$('div.external-event span.heures_left').each(function(){
+					var span = $(this);
+					var nbHeure = $(this).parent().data('options').nb_heure;
+					span.text(Math.round(nbHeure/60*100)/100+'h');
+					span.next().text(Math.round(nbHeure/80*100)/100);
+				});
+				
+				// Griser les cours avec 0h restantes
+				if($("#"+copiedEventObject.id_cours).data("options").nb_heure <= 0){
+					$("#"+copiedEventObject.id_cours).css('background-color', 'grey');
+				}
+				
+
+
+			}
+
+
+		});
+
+
+/* Sauvegarde en ajax dans un fichier JSON */
+$('.fa-floppy-o').click(function(){
+	save();
+});
+
+});
+function getCookie(name){
+
+	if(document.cookie.length == 0)
+		return null;
+	var regSepCookie = new RegExp('(; )', 'g');
+	var cookies = document.cookie.split(regSepCookie);
+	for(var i = 0; i < cookies.length; i++){
+		var regInfo = new RegExp('=', 'g');
+		var infos = cookies[i].split(regInfo);
+		if(infos[0] == name){
+			return unescape(infos[1]);
+
+		}
+	}
+	return null;
+}
+
+</script>
+<style>
+
+body {
+	margin-top: 40px;
+	text-align: center;
+	font-size: 14px;
+	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+}
+
+#wrap {
+	width: 1100px;
+	margin: 0 auto;
+}
+
+#save {
+	/*float: left;*/
+	width: 150px;
+	padding: 5px 10px;
+	border: 1px solid #ccc;
+}
+
+#save img {
+	height: 32px;
+}
+
+.heures_left {
+	border: 1px solid black;
+	border-radius: 5px;
+	margin-left: 5px;
+}
+
+.cours_left {
+	border: 1px solid black;
+	border-radius: 5px;
+	margin-left: 5px;
+}
+
+#external-events {
+	/*float: left;*/
+	width: 150px;
+	padding: 0 10px;
+	border: 1px solid #ccc;
+
+}
+
+#wrapper-menu {
+	float:left;
+}
+
+#bleu { 
+	background: #eee;
+}
+#vert {
+	background-color: green;
+}
+#rouge{
+	background-color: red,
+}
+
+#external-events h4 {
+	font-size: 16px;
+	margin-top: 0;
+	padding-top: 1em;
+}
+
+.external-event { /* try to mimick the look of a real event */
+	margin: 10px 0;
+	padding: 2px 4px;
+	background: #3366CC;
+	color: #fff;
+	font-size: .85em;
+	cursor: pointer;
+	border: 2px solid;
+	border-radius: 3px;
+
+}
+
+#external-events p {
+	margin: 1.5em 0;
+	font-size: 11px;
+	color: #666;
+}
+
+#external-events p input {
+	margin: 0;
+	vertical-align: middle;
+}
+
+#calendar {
+	float: right;
+	width: 900px;
+}
+#last_change{
+	
+}
+.fixed-top{
+	position: fixed;
+	top: 0;
+}
+a {
+	text-decoration: none;
+	color: black;
+}
+</style>
+</head>
+<body>
+	<div id='wrap'>
+
+		<div id="last_change"></div>
+		
+		<div id="wrapper-menu">
+
+
+			<div id="save">
+				~<script>document.write(getCookie('login'));</script><br />
+				<a href="./logout" title="Logout"><i  title="Deconnexion" class="fa fa-sign-out fa-2x" style="color:red;"></i></a><br />
+				<b>Lecture seule.</b>
+			</div>
+		</div>
+
+		<div id='calendar'></div>
+
+		<div style='clear:both'></div>
+
+	</body>
+	</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+ 
+<head>
+ 
+    <!-- Basics -->
+     
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+     <link href="../css/font-awesome.css" rel="stylesheet">
+    <title>Selection d'une révison</title>
+ 
+    <!-- CSS -->
+     
+   <style type="text/css">
+   /* Basics */
+ 
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: "Helvetica Neue", Helvetica, sans-serif;
+    color: #444;
+    -webkit-font-smoothing: antialiased;
+    background: #f0f0f0;
+     
+}
+#container {
+    position: fixed;
+    width: 340px;
+    height: 180px;
+    top: 50%;
+    left: 50%;
+    margin-top: -140px;
+    margin-left: -170px;
+    background: #fff;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+    -webkit-animation-name: bounceIn;
+    -webkit-animation-fill-mode: both;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-timing-function: linear;
+    -moz-animation-name: bounceIn;
+    -moz-animation-fill-mode: both;
+    -moz-animation-duration: 1s;
+    -moz-animation-iteration-count: 1;
+    -moz-animation-timing-function: linear;
+    animation-name: bounceIn;
+    animation-fill-mode: both;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    animation-timing-function: linear;
+    overflow: hidden;
+}
+p a {
+    font-size: 11px;
+    color: #aaa;
+    float: right;
+    margin-top: -13px;
+    margin-right: 20px;
+    -webkit-transition: all .4s ease;
+    -moz-transition: all .4s ease;
+    transition: all .4s ease;
+}
+ 
+
+ 
+p a:hover {
+    color: #555;
+}
+  
+#lower {
+    background: #ecf2f5;
+    width: 100%;
+    height: 69px;
+    margin-top: 20px;
+    box-shadow: inset 0 1px 1px #fff;
+    border-top: 1px solid #ccc;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+ .check {
+    margin-left: 3px;
+    font-size: 11px;
+    color: #444;
+    text-shadow: 0 1px 0 #fff;
+}
+
+a {
+	text-decoration: none;
+	cursor: pointer;
+}
+.fa-check-square {
+	padding-left: 70px;
+}
+ 
+</style>    
+</head>
+<!-- Main HTML -->
+     
+<body>
+     
+    <!-- Begin Page Content -->
+     
+    <div id="container">
+        
+     <h2 align="center"> <i class="fa-li fa fa-check-square fa-2x"></i>C'est fait !</h2>
+     <h5 align="center"> La révision choisie est :<%=rev %></h5><br />
+  	<h4 align="center"><i class="fa fa-refresh fa-spin fa-2x"></i> Redirection au calendrier en cours.</h4>
+    </div><!--/ container-->
+     
+     <script>
+     window.setTimeout("location=('./../');",2000);
+     </script>
+    <!-- End Page Content -->
+     
+</body>
+ 
+</html>

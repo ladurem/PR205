@@ -1,0 +1,120 @@
+{
+	"UET7A":{
+		"IF210":{
+			"titre":"Programmation Système",
+			"EI":{
+				"prof":"G.Mercier",
+				"nb_heures":640,
+				"longueur":80,
+				"groupe":3
+			},
+			"Projet":{
+				"prof":"G.Mercier",
+				"nb_heures":640,
+				"longueur":80,
+				"groupe":3
+			}
+		},
+		"PG220":{
+			"titre":"Programmation Orientée Objet",
+			"EI":{
+				"prof":"JR. Falleri // C. Teyton",
+				"nb_heures":800,
+				"longueur":80,
+				"groupe":2
+			},
+			"TP":{
+				"prof":"JR. Falleri // C. Teyton",
+				"nb_heures":320,
+				"longueur":80,
+				"groupe":2
+			},
+			"Projet":{
+				"prof":"JR. Falleri // C. Teyton",
+				"nb_heures":800,
+				"longueur":80,
+				"groupe":2
+			}
+		},
+		"PR204":{
+			"titre": "Projet Réseau et Système",
+			"Projet":{
+				"prof":"C.Capdevielle/G.Mercier",
+				"nb_heures":1600,
+				"longueur":80,
+				"groupe":2
+			}
+		},
+		"RE216":{
+			"titre":"Programmation Réseau",
+			"COURS":{
+				"prof":"D. Bromberg",
+				"nb_heures":240,
+				"longueur":80,
+				"groupe":1
+			},
+			"EI":{
+				"prof":"D. Bromberg",
+				"nb_heures":480,
+				"longueur": 80,
+				"groupe":2
+			},
+			"TP":{
+				"prof":"J.Arnaud/X.de Rochefort",
+				"nb_heures":640,
+				"longueur": 80,
+				"groupe":2
+			}
+		},
+		"RE220":{
+			"titre":"Réseaux Télécoms",
+			"COURS":{
+				"prof":"S. Krief",
+				"nb_heures":800,
+				"longueur":80,
+				"groupe":1
+			},
+			"TD":{
+				"prof":"J.Arnaud",
+				"nb_heures":320,
+				"longueur":80,
+				"groupe":2
+			},
+			"TP1":{
+				"prof":"N.Mbarek",
+				"nb_heures":320,
+				"longueur":80,
+				"groupe":3
+			},
+			"TP2":{
+				"prof":"J.Arnaud",
+				"nb_heures":140,
+				"longueur":80,
+				"groupe":3
+			}
+		}
+	},
+	"UET7B":{
+		"TS214":{
+			"titre":"Introduction aux algorithmes de compression",
+			"COURS":{
+				"prof":"Y. Berthoumieu",
+				"nb_heures":300,
+				"nb_cours": 4,
+				"groupe":2
+			},
+			"EI":{
+				"prof":"A.Schultz",
+				"nb_heures":480,
+				"nb_cours":6,
+				"groupe":2
+			},
+			"TP":{
+				"prof":"A.Schultz",
+				"nb_heures":400,
+				"nb_cours":5,
+				"groupe":2
+			}
+		}
+	}
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href='./fullcalendar/fullcalendar.css' rel='stylesheet' />
+	<link href='./fullcalendar/fullcalendar.print.css' rel='stylesheet' media='print' />
+	<script src='./lib/jquery.min.js'></script>
+	<script src='./lib/jquery-ui.custom.min.js'></script>
+	<script src='./fullcalendar/fullcalendar_2.js'></script>
+	<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+	<meta charset="utf8" />
+	<script>
+	$(document).ready(function() {
+		/* Select the right color according to type of lesson */
+		function setEventColor(event){
+			if(event.type_cours == 'COURS'){
+				event.color = '#fff3d4';
+				event.borderColor = '#b38509';
+				event.textColor = '#b38509';
+			} else if(event.type_cours == 'EI' || event.type_cours == 'TP'  || event.type_cours == 'Projet'){
+				event.color = '#f9ffdf';
+				event.borderColor = '#6b830a';
+				event.textColor = '#6b830a';
+			} else if(event.type_cours == 'TD'){
+				event.color = '#e4ecff';
+				event.borderColor = '#004b62';
+				event.textColor = '#004b62';
+			}
+		}
+		/* initialize the external events
+		-----------------------------------------------------------------*/
+		date=new Date();
+		var year=date.getFullYear();
+		//calendardate=new Date(year,8,1,0,0,0,0);
+		var datetempo_=new Date("August 26 "+year);
+        var calendardate = datetempo_;
+        console.log(datetempo_);
+
+        for(i=0;i<45;i++){
+            $('#printsection').append('<div style="height:900px;  width:100%;" class=page id=page'+i+'></div><div style="clear:both"></div>');
+          $('#page'+i).fullCalendar({
+
+             editable: false,
+             defaultView : 'agendaWeek',
+             droppable: false,
+             height: 1000000000000,
+             weekNumbers:false,
+             weekNumbers: true,
+             weekNumberCalculation: 'iso',
+             weekNumberTitle: 'SEMAINE',
+
+             handleWindowResize: true,
+             header:   {
+                left:   'title',
+                center: '',
+                right:  ''
+            },
+            eventSources: [
+            {
+                url: "save.json",
+				color: 'red',    // an option!
+				textColor: 'white'  // an option!
+			}
+			],
+
+		});
+          $('#page'+i).fullCalendar('gotoDate', calendardate.getFullYear(), calendardate.getMonth(),calendardate.getDate());
+          calendardate.setTime(calendardate.getTime()+24*3600*1000*7);
+          console.log(calendardate);
+      }
+
+      $('#wrapper-menu').remove();
+      window.print();
+
+  });
+</script>
+<style>
+body {
+    width: 595px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 12px;
+}
+#bleu { 
+	background: #eee;
+}
+#vert {
+	background-color: green;
+}
+#rouge{
+	background-color: red,
+}
+
+
+
+</style>
+</head>
+<body>
+	<div id='printsection'>
+	</div>
+	
+
+</body>
+</html>

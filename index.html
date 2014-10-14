@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href='./fullcalendar/fullcalendar.css' rel='stylesheet' />
+	<link href='./fullcalendar/fullcalendar.print.css' rel='stylesheet' media='print' />
+	<script src='./lib/jquery.min.js'></script>
+	<script src='./lib/jquery-ui.custom.min.js'></script>
+	<script src='./fullcalendar/fullcalendar_2.js'></script>
+	<link href="./css/font-awesome.css" rel="stylesheet">
+	<script src='/socket.io/socket.io.js'></script>
+	<meta charset="utf8" />
+	<script>
+	function save(){
+		liste_evts = $('#calendar').fullCalendar('clientEvents');
+		function replacer(key, value){
+			if (key == "source")
+				return undefined;
+			else
+				return value;
+		}
+		socket.emit('save', JSON.stringify(liste_evts, replacer));
+		$('.fa-floppy-o').css('color', 'red');
+	}
+	var socket = io.connect(document.URL);
+
+	$(document).ready(function() {
+		socket.on('save_ok', function() {
+			setTimeout( function(){$('.fa-floppy-o').css('color', 'green');  },800);
+		});
+		/* Select the right color according to type of lesson */
+		function setEventColor(event){
+			if(event.type_cours == 'COURS'){
+				event.color = '#fff3d4';
+				event.borderColor = '#b38509';
+				event.textColor = '#b38509';
+			} else if(event.type_cours == 'EI' || event.type_cours == 'TP'  || event.type_cours == 'Projet'){
+				event.color = '#f9ffdf';
+				event.borderColor = '#6b830a';
+				event.textColor = '#6b830a';
+			} else if(event.type_cours == 'TD'){
+				event.color = '#e4ecff';
+				event.borderColor = '#004b62';
+				event.textColor = '#004b62';
+			}
+		}
+		/* initialize the external events
+		-----------------------------------------------------------------*/
+
+		/* Importation liste de cours */
+		$(function(){
+			$(window).scroll(function () {
+				if ($(this).scrollTop() > 39) {
+					$('#wrapper-menu').addClass("fixed-top");
+				} else {
+					$('#wrapper-menu').removeClass("fixed-top");
+				} 
+
+			}); 
+
+			$.ajaxSetup({cache:false});
+			$.getJSON('./cours', function(data){
+				var prev_ue = '';
+				var prev_uv = '';
+				var nomUV = '';
+				var nomModule = '';
+				$.each(data, function(index, element){
+					//console.log(element);
+					nomUV = element.ue;
+					nomModule = element.numero;
+
+					if(prev_ue != element.ue){
+						prev_ue = element.ue;
+						$("<h1 class='external-event'  style='text-align: center;'>"+nomUV+"</h1>").appendTo('#external-events').after('<div id="'+nomUV+'" style="display:none;">').click(function(ev){
+							nomUV = ev.toElement.nextElementSibling.id;
+							$("#"+nomUV).toggle('normal');
+						});
+					}
+					if(prev_uv != element.numero){
+						prev_uv = element.numero;
+						$("<h2 class='external-event' style='text-align: center; background-color:purple'>"+nomModule+"</h2>").appendTo('#'+nomUV).after('<div id="'+nomModule+'" style="display:none;">').click(function(ev){
+							nomModule = ev.toElement.nextElementSibling.id;
+							$("#"+nomModule).toggle('normal');
+						});
+
+					}
+
+					var eventObject = {
+							title: nomModule+": "+element.titre+' '+element.type, // use the element's text as the event title
+						};
+						
+						//Affiche tous les groupes quand il y en a plusieurs.
+						if(element.groupes == 1) {
+							$('<div class="external-event" id="'+nomModule+'-'+element.type+'-0"  data-categorie="'+element.type+'" data-options=\'{"id":"'+nomModule+'","titre":"'+element.titre+'","nb_heure":"'+element.nb_heures+'","prof":"'+element.prof.name+'","longueur":"'+element.longueur+'","groupe":"0"}\'>'+nomModule+': '+element.titre+' '+element.type+' <span class="heures_left"></span><span class="cours_left"</span></div>')
+							
+							.data('eventObject', eventObject)
+							.draggable({
+								zIndex: 999,
+								revert: true,
+								revertDuration: 0,
+							}).appendTo('#'+nomModule);
+
+						} else {
+							for(i=1;i<=element.groupes;i++){
+								$('<div class="external-event" id="'+nomModule+'-'+element.type+'-'+i+'"  data-categorie="'+element.type+'" data-options=\'{"id":"'+nomModule+'","titre":"'+element.titre+'","nb_heure":"'+element.nb_heures+'","prof":"'+element.prof.name+'","longueur":"'+element.longueur+'","groupe":"'+i+'"}\'>'+nomModule+': '+element.titre+' '+element.type+' - Groupe '+i+'<span class="heures_left"></span><span class="cours_left"</span></div>')
+
+								.data('eventObject', eventObject)
+								.draggable({
+									zIndex: 999,
+									revert: true,
+									revertDuration: 0,
+								}).appendTo('#'+nomModule);
+							}
+						}
+
+					})
+$.each(durees, function(index, event){
+	$('#'+event.id).data('options').nb_heure = parseInt($('#'+event.id).data('options').nb_heure, 10) - event.duree;
+})
+$('div.external-event span.heures_left').each(function(){
+	var span = $(this);
+	var nbHeure = $(this).parent().data('options').nb_heure;
+	var longueur = $(this).parent().data('options').longueur;
+	span.text(Math.round(nbHeure/60*100)/100+'h');
+	span.next().text(Math.round(nbHeure/longueur*100)/100);
+});
+
+$('div.external-event').each(function(){
+	if($(this).data("categorie") == 'COURS'){
+		$(this).css('background-color','#fff3d4').css('color', '#b38509').css('border-color', '#b38509');
+	} else if($(this).data("categorie") == 'EI'){
+		$(this).css('background-color', '#f9ffdf').css('color', '#6b830a').css('border-color', '#6b830a');
+	} else if($(this).data("categorie") == 'TD'){
+		$(this).css('background-color', '#e4ecff').css('color', '#004b62').css('border-color', '#004b62');
+	} else if($(this).data("categorie") == 'TP' || $(this).data("categorie") == 'Projet'){
+		$(this).css('background-color', '#f9ffdf').css('color', '#6b830a').css('border-color', '#6b830a');
+	}
+});
+
+});
+
+});
+
+
+
+
+		/*// Griser les cours avec 0h restantes
+		if($("#"+id_cours).data("options").nb_heure <= 0){
+			$("#"+id_cours).css('background-color', 'grey');
+		}*/
+		
+
+		/* initialize the calendar
+		-----------------------------------------------------------------*/
+
+		$('#calendar').fullCalendar({
+			editable: true,
+			defaultView : 'agendaWeek',
+			droppable: true, // this allows things to be dropped onto the calendar !!!
+			height: 1000000000000,
+			
+
+			eventSources: [
+			{
+				url: "./save.json",
+				color: 'red',    // an option!
+				textColor: 'white'  // an option!
+			}
+
+			],
+
+
+			eventClick: function(event) {
+				// opens events in a popup window
+				alert('>'+event.title);
+
+				return false;
+			},
+			eventDrop: function(event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view) {
+
+				// Numérotation des cours lors d'un déplacement d'évènement.
+				id_cours = event.id_cours;
+				groupe = event.groupe;
+				prof = event.prof;
+				start = new Date(event.start);
+				end = new Date(event.end);
+				liste_same_ue = $('#calendar').fullCalendar('clientEvents', function(event2){
+					if(event2.id_cours == id_cours)
+						return true;
+				});
+				total_cours = Math.round($('#'+id_cours+' span.cours_left').text()) + Math.round(liste_same_ue.length);
+				liste_same_ue.sort(function(a,b){return a.start-b.start});
+				i=1;
+				$.each(liste_same_ue, function(index, value){
+					liste_same_ue[index].numero = i;
+
+					if(liste_same_ue[index].groupe == 0 ){
+						liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+					} else {
+						
+						liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\nGroupe "+liste_same_ue[index].groupe+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+					}
+					
+					i++;
+				});
+
+
+				// Gestion de la dépose d'un cours avec même nb_groupe/nom_prof
+				liste_conflits = $('#calendar').fullCalendar('clientEvents', function(event){
+					eventStart = new Date(event._start);
+					eventEnd = new Date(event._end);
+					//console.log("groupeevt"+event.groupe);
+					//console.log("groupe"+groupe);
+					if(event.groupe == groupe){
+						if(start >= eventStart && start <= eventEnd){
+							return true;
+						}
+						else if(end >= eventStart && end <= eventEnd){
+							return true;
+						}
+					}
+					if(event.prof == prof){
+						if(start >= eventStart && start <= eventEnd){
+							return true;
+						}
+						else if(end >= eventStart && end <= eventEnd){
+							return true;
+						}
+					}
+				});
+
+				if(liste_conflits.length > 1){
+					revertFunc();
+				event.borderColor = 'red';
+
+			} else {
+				save();// deplacement OK
+			}
+
+		},
+		eventResize: function(event, dayDelta, minuteDelta){
+				//Sauvegarde de l'evt
+				//alert('Chg temps'+event.start+', fin = '+event.end+'ID = '+event.id);
+				var id_cours  = event.id_cours;
+				$("#"+id_cours).data("options").nb_heure=$("#"+id_cours).data("options").nb_heure-minuteDelta;
+				// griser les cours qui ont 0h restantes à placer
+				if($("#"+id_cours).data("options").nb_heure <= 0){
+					$("#"+id_cours).css('background-color', 'grey');
+				}
+
+				$('div.external-event span.heures_left').each(function(){
+					var span = $(this);
+					var nbHeure = $(this).parent().data('options').nb_heure;
+					var longueur = $(this).parent().data('options').longueur;
+					span.text(Math.round(nbHeure/60*100)/100+'h');
+					span.next().text(Math.round(nbHeure/longueur*100)/100);
+				});
+				save();
+
+			},
+			drop: function(date, allDay) { // this function is called when something is dropped
+
+				// retrieve the dropped element's stored Event Object
+				var originalEventObject = $(this).data('eventObject');
+				// we need to copy it, so that multiple events don't have a reference to the same object
+				var copiedEventObject = $.extend({}, originalEventObject);
+				// assign it the date that was reported
+				copiedEventObject.groupe = $(this).data("options").groupe;
+				copiedEventObject.start = date;
+				copiedEventObject.id_cours  =  $(this).data("options").id+'-'+$(this).data("categorie")+'-'+copiedEventObject.groupe;
+				copiedEventObject.prof = $(this).data("options").prof;
+				copiedEventObject.type_cours = $(this).data("categorie");
+				copiedEventObject.titre = $(this).data("options").titre;
+				copiedEventObject.id_mat = $(this).data("options").id;
+
+				/* TODO : A creuser */
+				setEventColor(copiedEventObject);
+				copiedEventObject.end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()+1, date.getMinutes()+20, 0,0);
+				copiedEventObject.allDay = false;
+
+				groupe = copiedEventObject.groupe;
+				prof = copiedEventObject.prof;
+				id_cours = copiedEventObject.id_cours;
+				start = new Date(copiedEventObject.start);
+				end = new Date(copiedEventObject.end);
+
+
+				// Gestion de la dépose d'un cours avec même nb_groupe/nom_prof
+				liste_conflits = $('#calendar').fullCalendar('clientEvents', function(event){
+					eventStart = new Date(event._start);
+					eventEnd = new Date(event._end);
+					if(event.groupe == groupe){
+						if(start >= eventStart && start <= eventEnd){
+							return true;
+						}
+						else if(end >= eventStart && end <= eventEnd){
+							return true;
+						}
+					}
+					if(event.prof == prof){
+						if(start >= eventStart && start <= eventEnd){
+							return true;
+						}
+						else if(end >= eventStart && end <= eventEnd){
+							return true;
+						}
+					}
+					//if(event.groupe == groupe && ((eventStart > start && eventStart < end) || (eventEnd > start && eventEnd < end)))
+					//	return true;
+				});
+
+				if(liste_conflits.length == 0){
+
+
+				// Gestion de la numérotation des cours par UE
+
+				liste_same_ue = $('#calendar').fullCalendar('clientEvents', function(event){
+					if(event.id_cours == copiedEventObject.id_cours)
+						return true;
+				});
+				total_cours = Math.round($('#'+copiedEventObject.id_cours+' span.cours_left').text()) + Math.round(liste_same_ue.length);
+				if(liste_same_ue.length == 0){
+					copiedEventObject.numero = 1;
+					if($(this).data("options").groupe == 0){
+						copiedEventObject.title = $(this).data("options").titre+"\n"+$(this).data("categorie")+"\n"+$(this).data("options").prof+"\n"+copiedEventObject.numero+'/'+total_cours;
+						
+					} else {
+						copiedEventObject.title = $(this).data("options").titre+"\n"+$(this).data("categorie")+"\n"+$(this).data("options").prof+"\nGroupe "+$(this).data("options").groupe+"\n"+copiedEventObject.numero+'/'+total_cours;
+					}
+				} else {
+					liste_same_ue.push(copiedEventObject);
+					liste_same_ue.sort(function(a,b){return a.start-b.start});
+					i=1;
+					$.each(liste_same_ue, function(index, value){
+						if(liste_same_ue[index].id == copiedEventObject.id_cours){
+							copiedEventObject.numero = i;
+							if(copiedEventObject.groupe == 0){
+								copiedEventObject.title = copiedEventObject.titre+"\n"+copiedEventObject.type_cours+"\n"+copiedEventObject.prof+"\n"+copiedEventObject.numero+'/'+total_cours;
+							} else {
+								copiedEventObject.title = copiedEventObject.titre+"\n"+copiedEventObject.type_cours+"\n"+copiedEventObject.prof+"\nGroupe "+copiedEventObject.groupe+"\n"+copiedEventObject.numero+'/'+total_cours;
+
+							}
+
+
+							i++;
+						} else {
+							liste_same_ue[index].numero = i;
+							if(liste_same_ue[index].groupe == 0){
+								liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+							} else {
+
+								liste_same_ue[index].title = liste_same_ue[index].titre+"\n"+liste_same_ue[index].type_cours+"\n"+liste_same_ue[index].prof+"\nGroupe "+liste_same_ue[index].groupe+"\n"+liste_same_ue[index].numero+'/'+total_cours;
+							}
+
+
+							i++;
+						}
+					})
+} 
+
+$('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
+
+save();
+
+$(this).data('options').nb_heure = parseInt($(this).data('options').nb_heure, 10) - parseInt($(this).data('options').longueur, 10);
+
+$('div.external-event span.heures_left').each(function(){
+	var span = $(this);
+	var nbHeure = $(this).parent().data('options').nb_heure;
+	var longueur = $(this).parent().data('options').longueur;
+	span.text(Math.round(nbHeure/60*100)/100+'h');
+	span.next().text(Math.round(nbHeure/longueur*100)/100);
+});
+
+				// Griser les cours avec 0h restantes
+				if($("#"+copiedEventObject.id_cours).data("options").nb_heure <= 0){
+					$("#"+copiedEventObject.id_cours).css('background-color', 'grey').css('color','black');
+
+				}
+				
+			} else {
+				old_color = $(this).css('background-color');
+				oldcolor = $(this).css('color');
+				$(this).animate({backgroundColor:'#cc3300',color:"#FAFAFA"}, 500);
+				console.log('red');
+				$(this).animate({backgroundColor:old_color,color:oldcolor}, 800);
+
+
+
+
+			}
+
+		},
+		eventMouseover : function(event, jsEvent){
+			event.width = $(this).css('width');
+			event.height = $(this).css('height');
+			$(this).css('height','auto');
+			height2 = $(this).css('height');
+			if(parseInt(event.height,10) > parseInt(height2,10)){
+				$(this).css('height',event.height);
+			}
+			$(this).animate({ zIndex: 9000, width: "150px"}, 50);
+		},
+		eventMouseout: function(event,jsEvent) {
+			$(this).css('height',event.height);
+			$(this).animate({ width: event.width,zIndex: 100}, 50 );
+		},
+
+	});
+
+$(".fc-text-arrow").each(function(index,value){
+	$(this).click(function(){
+		console.error('Nettoyage');
+		$("#calendar").fullCalendar( 'removeEvents');
+	})
+})
+$('.fa-floppy-o').click(function(){
+	save();
+});
+$('.fa-print').click(function(){
+	$("#calendar").html('<h4 align="center"><i class="fa fa-refresh fa-spin fa-2x"></i> Redirection au calendrier en cours.</h4>');
+})
+
+});
+function getCookie(name){
+	if(document.cookie.length == 0)
+		return null;
+	var regSepCookie = new RegExp('(; )', 'g');
+	var cookies = document.cookie.split(regSepCookie);
+	for(var i = 0; i < cookies.length; i++){
+		var regInfo = new RegExp('=', 'g');
+		var infos = cookies[i].split(regInfo);
+		if(infos[0] == name){
+			return unescape(infos[1]);
+
+		}
+	}
+	return null;
+}
+
+</script>
+<style>
+
+body {
+	margin-top: 40px;
+	text-align: center;
+	font-size: 14px;
+	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+
+}
+
+#wrap {
+	width: 1100px;
+	margin: 0 auto;
+}
+
+#save {
+	width: auto;
+	padding: 5px;
+	border: 1px solid #ccc;
+}
+
+#save img {
+	height: 32px;
+}
+
+.heures_left {
+	border: 1px solid black;
+	border-radius: 5px;
+	margin-left: 5px;
+}
+
+.cours_left {
+	border: 1px solid black;
+	border-radius: 5px;
+	margin-left: 5px;
+}
+
+#external-events {
+	width: 150px;
+	padding: 0 10px;
+	border: 1px solid #ccc;
+
+}
+
+#wrapper-menu {
+	float:left;
+}
+
+#bleu { 
+	background: #eee;
+}
+#vert {
+	background-color: green;
+}
+#rouge{
+	background-color: red,
+}
+
+#external-events h4 {
+	font-size: 16px;
+	margin-top: 0;
+	padding-top: 1em;
+}
+#external-events{
+	max-height: 650px;
+
+}
+.external-event {
+	margin: 10px 0;
+	padding: 2px 4px;
+	background: #3366CC;
+	color: #fff;
+	font-size: .85em;
+	cursor: pointer;
+	border: 2px solid;
+	border-radius: 3px;
+
+}
+
+#external-events p {
+	margin: 1.5em 0;
+	font-size: 11px;
+	color: #666;
+}
+
+#external-events p input {
+	margin: 0;
+	vertical-align: middle;
+}
+
+#calendar {
+	float: right;
+	width: 900px;
+	
+}
+.fixed-top{
+	position: fixed;
+	top: 0;
+}
+a {
+	text-decoration: none;
+	color: black;
+}
+.fa:hover {
+	color: #0099ff;
+}
+.fa{
+	color: #666666;
+}
+.fa-sign-out:hover{
+	color: red;
+}
+</style>
+</head>
+<body>
+	<div id='wrap'>
+		<div id="last_change"></div>
+		<div id="wrapper-menu">
+			<div id="save">
+				~<script>document.write(getCookie('login'));</script><br />
+				<i class="fa fa-floppy-o fa-2x"></i>
+				<a href="./revision/index.html" title="Revisions"><i class="fa fa-folder fa-2x"></i></a> 
+				<a href="./export" title="Export"><i class="fa fa-share-square-o fa-2x"></i></a> 
+				<a href="./print"><i class="fa fa-print fa-2x"></i></a>
+				<a href="./gestion"><i class="fa fa-cog fa-2x"></i> </a>
+				<a href="./logout" title="Logout"><i  title="Deconnexion" class="fa fa-sign-out fa-2x" ></i></a>
+
+				<div id='external-events'> </div>
+			</div>
+		</div>
+
+		<div id='calendar'></div>
+
+		<div style='clear:both'></div>
+
+	</body>
+	</html>

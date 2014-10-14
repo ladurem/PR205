@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Gestion des profs et cours</title>
+	<script src='./lib/jquery.min.js'></script>
+	<script src='./lib/jquery-ui.custom.min.js'></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<style type="text/css"></style>
+	<link href="../css/font-awesome.css" rel="stylesheet">
+
+	<link href= rel="stylesheet">
+	<style type="text/css">
+	body{
+		background-color: #FAFAFA;
+	}
+	label {
+		display: block;
+		float: left;
+		width: 210px;
+	}
+	#cours{
+		margin: 0px;
+		float: left;
+		width: 49%;
+		border: 1px solid black;
+	}
+	#editionProfs{
+		float: right;
+		border: 1px solid black;
+		width: 50%;
+		margin: 0;
+	}
+	input, textarea, select {
+		display: block;
+		margin: auto;
+		border: none;
+		padding: 5px;
+		border-radius: 5px;
+		background-color: lightgrey;
+		color: #000000;
+		max-width: 100%;
+		width: 140px;
+	}
+	select{
+		width: 150px;
+	}
+
+	.inputButton{
+		margin-top: 20px;
+	}
+	.inputButton:hover{
+		background-color: grey;
+		cursor: pointer;
+	}
+
+	table { 
+		margin-left: 20px;
+		color: #333;
+		font-family: Helvetica, Arial, sans-serif;
+		max-width: 640px; 
+		min-width: 300px;
+text-align: center;
+margin:0 auto;
+		border-collapse: 
+		collapse; border-spacing: 0; 
+	}
+
+	td, th { 
+		border: 1px solid transparent; /* No more visible border */
+		height: 30px; 
+		transition: all 0.3s;  /* Simple transition for hover effect */
+	}
+
+	th {
+		background: #DFDFDF;  /* Darken header a bit */
+		font-weight: bold;
+	}
+
+	td {
+		background: #FAFAFA;
+		text-align: center;
+	}
+	p{
+		margin-left: 10px;
+	}
+	h1{
+		margin-left: 20px;
+	}
+	h1:before{
+		content:'> ';
+		color:grey;
+	}
+
+	/* Cells in even rows (2,4,6...) are one color */ 
+	tr:nth-child(even) td { background: #F1F1F1; }   
+
+	/* Cells in odd rows (1,3,5...) are another (excludes header cells)  */ 
+	tr:nth-child(odd) td { background: #FEFEFE; }  
+
+	a{
+		text-decoration: none;
+		color: black;
+	}
+
+	</style>
+</head>
+<body>
+	<!--<hr/> -->
+	<div id="cours">
+		<h1>Gestion des cours</h1>
+		<form action="cours/add/" method="post">
+			<p><label>Nom UE :</label> <input  required type="text" name="ue" /><br />
+				<label>Numéro du cours (TS217) :</label> <input  required type="text" name="numero" /><br/>
+				<label>Titre du cours :</label> <input  required type="text" name="nom" /><br/>
+				<label>Type de cours :</label> <select name="type">
+				<option value="COURS" style="background-color:#FFF3D4;">COURS</option>
+				<option value="EI" style="background-color:#f9ffdf;" >EI</option>
+				<option value="TD" style="background-color:#E4ECFF;" >TD</option>
+				<option value="TP" style="background-color:#f9ffdf;">TP</option>
+				<option value="Projet" style="background-color:#EEEEEE;">Projet</option>
+				<option value="Examen" style="background-color:#FFDEDE;">Examen</option>
+			</select><br/>
+			<label>Durée (en minutes) :</label> <input  required type="text" name="duree" /><br/>
+			<label>Longueur d'1 cours (en minutes) :</label> <input  required type="text" name="longueur" /><br/>
+			<label>Nombre de groupes :</label> <input  required type="text" name="groupes" /><br/>
+			<label>Professeur :</label> 
+			<select name="prof">
+				<% listeProfs.forEach(function(data, index){ %>
+				<option value="<%= data._id %>"><%= data.name %></option>
+				<% }); %>
+			</select>
+			<input  type="submit" class="inputButton" value="Créer" />
+		</p>
+	</form>
+	<table>
+		<tr>
+			<th>Type</th>
+			<th>Nom</th>
+			<th>Professeur</th>
+			<th>Action</th>
+
+		</tr>
+		<% listeCours.forEach(function(data, index){ %>
+		<tr>
+			<td><%= data.type %></td>
+			<td><%= data.titre %></td>
+			<td><%= data.prof.name %></td>
+			<td><a href="cours/delete/<%= data._id %>"><i class="fa fa-times fa-2x"></i> </a></td>
+		</tr>
+		<% }); %>
+	</table>
+	<br /><br />
+</div>
+
+
+<div id="editionProfs">
+	<h1>Gestion des professeurs</h1>
+	<form id="prof" action="profs/add/" method="post">
+		<p>Ajouter un prof (Nom, Prénom) <input type="text" name="prof" required id="nameProf" />
+			<input type="submit" value="Ajouter" class="inputButton"/>
+		</p>
+	</form>
+	<table>
+		<tr>
+			<th>UniqueName</th>
+			<th>Action</th>
+		</tr>
+		<% listeProfs.forEach(function(data, index){  %>
+		<tr>
+			<td><%= data.name %></td>
+			<td><a href="profs/delete/<%= data._id %>"><i class="fa fa-times fa-2x"></i> </a></td>
+		</tr>
+		<% }); %>
+
+	</table>
+	
+
+</ul>
+</div>
+</body>
+</html>

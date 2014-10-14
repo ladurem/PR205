@@ -1,0 +1,10 @@
+CT_EVENT
+_event_id,_day_of_week,_start_time,_end_time,_weeks,_break_mins,_spanName,_event_catName,_tag1,_tag2,_capacity_req,_deptName,_global_event,_protected,_suspended,_grouping_id,_registers_req,_lock,_resType,_resName,_resWeeks,_layoutName,_scheduling_status,_quantity
+1737145000,Tue,8:50,10:10,21,0,,,,,,,N,N,N,,,
+,,,,,,,,,,,,,,,,,,COURS,IF210 Programmation système,,,,
+,,,,,,,,,,,,,,,,,,Group,T2,,,,
+,,,,,,,,,,,,,,,,,,Staff,"Mercier, Guillaume",,,,
+412145000,Mon,10:10,11:30,21,0,,,,,,,N,N,N,,,
+,,,,,,,,,,,,,,,,,,Projet,PR204 Projet Réseaux et système,,,,
+,,,,,,,,,,,,,,,,,,Group,T2-G1,,,,
+,,,,,,,,,,,,,,,,,,Staff,"Mercier, Guillaume",,,,
