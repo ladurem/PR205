@@ -7,6 +7,17 @@
   },
   "dependencies": {
     "express": "3.3.8",
-    "jade": "*"
+    "jade": "*",
+"csv": "0.3.7",
+"ejs": "1.0.0",
+"ent": "0.1.0",
+"express": "3.3.8",
+"jade": "1.7.0",
+"json2csv": "2.2.1",
+"jsonfile": "1.1.1",
+"mongoose": "3.8.9",
+"socket.io": "0.9.16",
+"util": "0.10.3",
+"ya-csv": "0.9.3"
   }
 }
